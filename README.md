@@ -25,6 +25,14 @@ A secure, email-verified voting platform built using Python Flask and SQLite. De
 
 ---
 
+<img src="Login.jpg" alt="Login" />
+
+<!-- RTM Image (JPEG) -->
+<img src="RTM.jpg" alt="RTM" />
+
+<!-- ScreenShare Image (PNG) -->
+<img src="ScreenShare1.png" alt="Screen Share" />
+
 ## 🧪 Local Setup
 
 ### 1. Clone the Repository
