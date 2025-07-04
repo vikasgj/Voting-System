@@ -1,0 +1,93 @@
+{# templates/register.html #}
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">
+                    {% if otp_sent %}
+                        Step 2: Verify OTP
+                    {% else %}
+                        Register New Voter
+                    {% endif %}
+                </h2>
+
+                {# Display informational message when OTP field is shown #}
+                {% if otp_sent %}
+                <p class="text-center text-muted mb-3">
+                    An OTP has been sent to <strong>{{ email }}</strong>. Please enter it below.
+                    <br><small>The OTP is valid for 10 minutes.</small>
+                </p>
+                {% endif %}
+
+                {# Main Registration Form #}
+                <form method="POST" action="{{ url_for('register') }}">
+
+                    {# --- Fields visible only during initial registration --- #}
+                    {% if not otp_sent %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        {# Use form_data if available (e.g., after validation error) #}
+                        <input type="text" name="name" id="name" class="form-control" required value="{{ request.form.name or form_data.get('name', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" name="email" id="email" class="form-control" required value="{{ request.form.email or form_data.get('email', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" name="phone" id="phone" class="form-control" value="{{ request.form.phone or form_data.get('phone', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" name="password" id="password" class="form-control" required>
+                        <div class="form-text">Must be at least 8 characters long.</div>
+                    </div>
+                     <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                    </div>
+                    {% endif %} {# End of initial registration fields #}
+
+
+                    {# --- OTP Field - Visible only after initial submission --- #}
+                    {% if otp_sent %}
+                    <div class="mb-3">
+                        <label for="otp" class="form-label">Enter OTP <span class="text-danger">*</span></label>
+                        <input type="text" name="otp" id="otp" class="form-control" required autofocus pattern="\d{6}" title="Enter the 6-digit OTP sent to your email.">
+                    </div>
+                    {% endif %} {# End of OTP field #}
+
+
+                    {# --- Submit Button --- #}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                             {% if otp_sent %}
+                                Verify OTP & Complete Registration
+                             {% else %}
+                                Send OTP & Continue
+                             {% endif %}
+                        </button>
+                    </div>
+                </form>
+
+                {# Link to Login page #}
+                <p class="text-center mt-3">
+                    Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+                </p>
+
+                 {# Optional: Add link to restart if stuck in OTP phase #}
+                 {% if otp_sent %}
+                 <p class="text-center mt-2 small text-muted">
+                    Didn't receive OTP or it expired? <a href="{{ url_for('register') }}">Start registration again</a>.
+                 </p>
+                 {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

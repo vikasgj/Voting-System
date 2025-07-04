@@ -1,0 +1,109 @@
+{# templates/results.html #}
+{% extends "base.html" %}
+
+{% block title %}Election Results{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Election Results</h1>
+
+{# --- ADD WINNER DISPLAY SECTION --- #}
+{% if voting_closed and winners %}
+    <div class="alert alert-success text-center mb-4 shadow-sm" role="alert">
+        <h4 class="alert-heading">
+            {% if winners|length == 1 %}
+                Election Winner!
+            {% else %}
+                Election Result: Tie!
+            {% endif %}
+        </h4>
+        <p>
+            {% if winners|length == 1 %}
+                The winner is <strong>{{ winners[0].name }} ({{ winners[0].party }})</strong>
+            {% else %}
+                 There is a tie between the following candidates:
+                <ul class="list-unstyled mb-0 mt-2">
+                    {% for winner in winners %}
+                    <li><strong>{{ winner.name }} ({{ winner.party }})</strong></li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+             with <strong>{{ max_votes }}</strong> vote(s) each.
+        </p>
+        <hr>
+        <p class="mb-0">Congratulations!</p>
+    </div>
+{% elif voting_closed and results and max_votes == 0 %}
+    <div class="alert alert-warning text-center mb-4 shadow-sm" role="alert">
+        <h4 class="alert-heading">Voting Closed - No Votes Cast</h4>
+        <p>The voting period has ended, but no votes were recorded for any candidate.</p>
+    </div>
+{% elif not voting_closed %}
+     <div class="alert alert-info text-center mb-4 shadow-sm" role="alert">
+        <h4 class="alert-heading">Voting In Progress</h4>
+        <p>The voting period is currently open. Results and winner declaration will be available once voting ends.</p>
+    </div>
+{% endif %}
+{# --- END WINNER DISPLAY SECTION --- #}
+
+
+{% if user_vote %}
+<div class="alert alert-info mb-4" role="alert"> {# Changed to info for less emphasis vs winner box #}
+  <h5 class="alert-heading">Your Vote Confirmation</h5> {# Slightly smaller heading #}
+  <p>You voted for: <strong>{{ user_vote.candidate }} ({{ user_vote.party }})</strong>.</p>
+  <p class="mb-0 small text-muted">Your Vote Hash (for verification): <code style="font-size: 0.8em;">{{ user_vote.hash }}</code></p>
+</div>
+{% elif is_user and not voting_closed %} {# Only show "you haven't voted" if user is logged in AND voting is open #}
+ <div class="alert alert-secondary mb-4" role="alert">
+     You have not cast a vote in this election yet. <a href="{{ url_for('vote') }}" class="alert-link">Cast your vote now</a>.
+</div>
+{% elif is_user and voting_closed and not user_vote %} {# User is logged in, voting closed, they didn't vote #}
+ <div class="alert alert-secondary mb-4" role="alert">
+     The voting period has ended, and you did not cast a vote in this election.
+</div>
+{% endif %}
+
+
+{% if results %}
+<h2 class="text-center mb-3">Detailed Results</h2> {# Added sub-heading #}
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Image</th>
+                <th scope="col">Candidate Name</th>
+                <th scope="col">Party</th>
+                <th scope="col" class="text-end">Votes Received</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr class="{% if voting_closed and result.name in winners|map(attribute='name') %} table-success {% endif %}"> {# Highlight winners #}
+                <th scope="row">{{ loop.index }}</th>
+                <td>
+                    <img src="{{ url_for('uploaded_file', filename=result.image_filename) if result.image_filename else url_for('static', filename='images/default_candidate.png') }}"
+                         alt="{{ result.name }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                </td>
+                <td>
+                    {{ result.name }}
+                    {% if voting_closed and result.name in winners|map(attribute='name') %}
+                       <span class="badge bg-warning text-dark ms-2">Winner</span>
+                    {% endif %}
+                </td>
+                <td>{{ result.party }}</td>
+                <td class="text-end fs-5 {% if voting_closed and result.name in winners|map(attribute='name') %} fw-bold {% endif %}"> {# Bold winner votes #}
+                    {{ result.vote_count }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% elif not voting_closed %} {# If voting is open and no results yet #}
+    <p class="text-center text-muted fst-italic mt-5">No votes have been cast yet.</p>
+{% elif voting_closed %} {# If voting closed and still no results (should be caught by no votes msg above, but just in case) #}
+     <p class="text-center text-muted fst-italic mt-5">No candidates or results available.</p>
+{% endif %}
+
+
+{% endblock %}

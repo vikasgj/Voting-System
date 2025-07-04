@@ -1,0 +1,12 @@
+[
+    {
+        "index": 0,
+        "timestamp": "2025-05-08T06:24:37.557863",
+        "data": {
+            "genesis": true,
+            "message": "Voting System Blockchain Genesis"
+        },
+        "previous_hash": "0",
+        "hash": "84406dd20d53f0cffdb5cd20168cb979e4ab3925f7b720cd952f15a1a3e6022d"
+    }
+]

@@ -1,0 +1,104 @@
+{% extends "admin_layout.html" %}
+{% block title %}Node {{ node_id_disp }} - Blockchain Ledger{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Simulated Blockchain Ledger - Node: <span class="badge bg-primary">{{ node_id_disp }}</span></h2>
+    <p>PoW Difficulty: {{ difficulty }} (leading zeros)</p>
+    <hr>
+
+    {% include '_flash_messages.html' %}
+
+    <div class="mb-3">
+        <form method="GET" action="{{ url_for('admin_view_blockchain_nodes') }}" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label for="node_index_select" class="col-form-label">View Node:</label>
+            </div>
+            <div class="col-auto">
+                <select name="node_index" id="node_index_select" class="form-select">
+                    {% for i in range(num_nodes) %}
+                    <option value="{{ i }}" {% if i == current_node_idx %}selected{% endif %}>Node-{{ i }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-eye"></i> View Selected Node</button>
+            </div>
+        </form>
+    </div>
+
+
+    <div class="alert {% if is_valid %}alert-success{% else %}alert-danger{% endif %}" role="alert">
+        <strong>Node {{ node_id_disp }} Blockchain Status:</strong>
+        {% if is_valid %}
+            This node's blockchain ledger is currently VALID.
+        {% else %}
+            WARNING! This node's blockchain ledger's integrity check FAILED.
+        {% endif %}
+        <br>
+        <small>Chain Length: {{ current_chain_length }} blocks.</small>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <h4>Blocks on Node {{ node_id_disp }}</h4>
+            {% if chain %}
+                <div class="accordion" id="blockchainAccordion">
+                    {% for block in chain|reverse %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingBlock{{ block.index }}">
+                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBlock{{ block.index }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapseBlock{{ block.index }}">
+                                <strong>Block #{{ block.index }}</strong>   (Nonce: {{ block.nonce }})
+                                {% if block.index == 0 %}<span class="badge bg-info ms-2">Genesis Block</span>{% endif %}
+                                {% if "miner" in block.data %}<span class="badge bg-secondary ms-2">Mined by: {{ block.data.miner }}</span>{% endif %}
+                            </button>
+                        </h2>
+                        <div id="collapseBlock{{ block.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="headingBlock{{ block.index }}" data-bs-parent="#blockchainAccordion">
+                            <div class="accordion-body">
+                                <table class="table table-sm table-bordered">
+                                    <tbody>
+                                        <tr><th style="width: 150px;">Index</th><td>{{ block.index }}</td></tr>
+                                        <tr><th>Timestamp (UTC)</th><td>{{ block.timestamp }}</td></tr>
+                                        <tr><th>Nonce</th><td>{{ block.nonce }}</td></tr>
+                                        <tr><th>Data</th><td><pre class="bg-light p-2 rounded" style="white-space: pre-wrap; word-break: break-all;"><code>{{ block.data_str }}</code></pre></td></tr>
+                                        <tr><th>Previous Hash</th><td><code style="word-break: break-all;">{{ block.previous_hash }}</code></td></tr>
+                                        <tr><th>Block Hash</th><td><code style="word-break: break-all;">{{ block.hash }}</code></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    Node {{ node_id_disp }}'s blockchain is currently empty or could not be displayed.
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <h4>Node {{ node_id_disp }} Mempool</h4>
+            <form action="{{ url_for('admin_mine_on_node', node_idx=current_node_idx) }}" method="POST" class="mb-3">
+                <button type="submit" class="btn btn-success btn-sm {% if not mempool %}disabled{% endif %}">
+                    <i class="fas fa-hammer"></i> Mine Pending Transactions on Node {{ node_id_disp }}
+                </button>
+            </form>
+            {% if mempool %}
+                <ul class="list-group">
+                    {% for tx in mempool %}
+                    <li class="list-group-item">
+                        <small><strong>Type:</strong> {{ tx.type }}<br>
+                           <strong>Voter:</strong> {{ tx.voter_name }} (ID: {{ tx.voter_id }})<br>
+                           <strong>Candidate:</strong> {{ tx.candidate_id }}<br>
+                           <strong>Timestamp:</strong> {{ tx.timestamp|truncate(19,True) }}<br>
+                           <strong>DB Hash Ref:</strong> {{ tx.vote_db_hash[:15] }}...</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Mempool is empty.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

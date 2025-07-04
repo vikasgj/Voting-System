@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Admin Dashboard</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Registered Voters</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ voter_count }}</h5>
+            </div>
+        </div>
+    </div>
+     <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Votes Cast</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ vote_count }}</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-dark bg-warning mb-3">
+            <div class="card-header">Voting Status</div>
+            <div class="card-body">
+                 <h5 class="card-title">{{ 'OPEN' if voting_open else 'CLOSED' }}</h5>
+                 <form action="{{ url_for('toggle_voting') }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-{{ 'danger' if voting_open else 'success' }}">
+                        {{ 'End Voting' if voting_open else 'Start Voting' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{# ... other dashboard content ... #}
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                Simulated Decentralized Blockchain Network ({{ num_nodes }} Nodes)
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('admin_view_blockchain_nodes') }}" class="btn btn-outline-primary mb-2">
+                    <i class="fas fa-project-diagram"></i> View Node Chains & Mempools
+                </a>
+                {% if node_info %}
+                <h5>Node Status:</h5>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr><th>Node ID</th><th>Chain Length</th><th>Mempool Size</th><th>Currently Mining?</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for node in node_info %}
+                        <tr>
+                            <td>{{ node.id }}</td>
+                            <td>{{ node.chain_length }}</td>
+                            <td>{{ node.mempool_size }}</td>
+                            <td><span class="badge {% if node.is_mining %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ "Yes" if node.is_mining else "No" }}</span></td>
+                            <td>
+                                <form action="{{ url_for('admin_mine_on_node', node_idx=loop.index0) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-xs btn-success {% if node.mempool_size == 0 or node.is_mining %}disabled{% endif %}" title="Mine on {{node.id}}">
+                                        <i class="fas fa-hammer"></i>
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('admin_view_blockchain_nodes', node_index=loop.index0) }}" class="btn btn-xs btn-info" title="View {{node.id}} Chain">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No node information available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ... rest of dashboard content ... #}
+<div class="mb-4">
+     <a href="{{ url_for('admin_add_candidate') }}" class="btn btn-primary">Add New Candidate</a>
+</div>
+
+
+<h2 class="mt-5 mb-3">Registered Voters ({{ voter_count }})</h2>
+<div class="table-responsive">
+    <table class="table table-sm table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                {# --- REMOVE THIS HEADER --- #}
+                {# --- END REMOVAL --- #}
+                <th>Registered At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if voters %}
+                {% for voter in voters %}
+                <tr>
+                    <td>{{ voter.id }}</td>
+                    <td>{{ voter.name }}</td>
+                    <td>{{ voter.email }}</td>
+                    {# --- REMOVE THIS CELL --- #}
+                    {# --- END REMOVAL --- #}
+                    <td>{{ voter.registered_at.strftime('%Y-%m-%d %H:%M:%S') if voter.registered_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                {# Adjust colspan if needed, now it's 4 columns instead of 5 #}
+                <tr><td colspan="4" class="text-center text-muted">No registered voters found.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+<h2 class="mt-5 mb-3">Current Candidates</h2>
+{% if candidates %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Party</th>
+                <th>Actions</th> {# Keep this header #}
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate in candidates %}
+            <tr>
+                <td>
+                    <img src="{{ url_for('uploaded_file', filename=candidate.image_filename) if candidate.image_filename else url_for('static', filename='images/default_candidate.png') }}"
+                         alt="{{ candidate.name }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                </td>
+                <td>{{ candidate.name }}</td>
+                <td>{{ candidate.party }}</td>
+                <td>
+                    {# --- REPLACE THE DISABLED BUTTON WITH THIS FORM --- #}
+                    <form action="{{ url_for('admin_delete_candidate', candidate_id=candidate.id) }}"
+                          method="post"
+                          style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete candidate \'{{ candidate.name }}\'? This action cannot be undone and might fail if the candidate has votes.');">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                              <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </form>
+                    {# Add Edit button/link here later if needed #}
+                     <!-- <a href="#" class="btn btn-sm btn-secondary disabled">Edit</a> -->
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-muted">No candidates added yet.</p>
+{% endif %}
+
+ <h2 class="mt-5 mb-3">Live Results</h2>
+ {% if results %}
+ <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+         <thead class="table-dark">
+            <tr>
+                <th>Rank</th>
+                <th>Image</th>
+                <th>Candidate Name</th>
+                <th>Party</th>
+                <th>Votes Received</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                 <td>
+                    <img src="{{ url_for('uploaded_file', filename=result.image_filename) if result.image_filename else url_for('static', filename='images/default_candidate.png') }}"
+                         alt="{{ result.name }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                </td>
+                <td>{{ result.name }}</td>
+                <td>{{ result.party }}</td>
+                <td><strong>{{ result.vote_count }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+ </div>
+ {% else %}
+    <p class="text-center text-muted fst-italic">No votes cast or no candidates available yet.</p>
+ {% endif %}
+
+{% endblock %}

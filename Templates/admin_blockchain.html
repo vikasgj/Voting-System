@@ -1,0 +1,81 @@
+{% extends "admin_layout.html" %}
+{% block title %}Blockchain Ledger Viewer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Blockchain Ledger</h2>
+    <hr>
+
+    {% include '_flash_messages.html' %} {# To display flash messages #}
+
+    <div class="alert {% if is_valid %}alert-success{% else %}alert-danger{% endif %}" role="alert">
+        <strong>Blockchain Status:</strong>
+        {% if is_valid %}
+            The blockchain ledger is currently VALID.
+        {% else %}
+            WARNING! The blockchain ledger's integrity check FAILED. This could indicate tampering or corruption. The system may have attempted to reset it.
+        {% endif %}
+        <br>
+        <small>Ledger File: <code>{{ blockchain_file_path }}</code> | Length: {{ current_chain_length }} blocks.</small>
+    </div>
+
+    <div class="mb-3">
+        <a href="{{ url_for('admin_view_blockchain') }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-sync-alt"></i> Refresh & Re-validate Chain
+        </a>
+    </div>
+
+    {% if chain %}
+        <div class="accordion" id="blockchainAccordion">
+            {% for block in chain|reverse %} {# Show newest blocks first (highest index) #}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingBlock{{ block.index }}">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBlock{{ block.index }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapseBlock{{ block.index }}">
+                        <strong>Block #{{ block.index }}</strong>   (Timestamp: {{ block.timestamp|truncate(19, True) }})
+                        {% if block.index == 0 %}<span class="badge bg-info ms-2">Genesis Block</span>{% endif %}
+                    </button>
+                </h2>
+                <div id="collapseBlock{{ block.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="headingBlock{{ block.index }}" data-bs-parent="#blockchainAccordion">
+                    <div class="accordion-body">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 150px;">Index</th>
+                                    <td>{{ block.index }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Timestamp (UTC)</th>
+                                    <td>{{ block.timestamp }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Data</th>
+                                    <td><pre class="bg-light p-2 rounded" style="white-space: pre-wrap; word-break: break-all;"><code>{{ block.data_str }}</code></pre></td>
+                                </tr>
+                                <tr>
+                                    <th>Previous Hash</th>
+                                    <td><code style="word-break: break-all;">{{ block.previous_hash }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Block Hash</th>
+                                    <td><code style="word-break: break-all;">{{ block.hash }}</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            The blockchain is currently empty or could not be displayed. This might occur if it was just initialized.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- If you are using Bootstrap 5 JS for the accordion -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.x.x/dist/js/bootstrap.bundle.min.js"></script> -->
+{% endblock %}

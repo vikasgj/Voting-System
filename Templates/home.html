@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Voting System{% endblock %}
+
+{% block body_class %}text-center{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <!-- Adjust width/height as needed, maybe use img-fluid class -->
+    <img src="{{ url_for('static', filename='images/banner.jpg') }}" alt="Voting Banner" class="img-fluid rounded shadow-sm" style="max-height: 400px; object-fit: cover; width: 100%;">
+</div>
+
+<h1 class="display-4 mb-4">Welcome to the Online Voting System</h1>
+<p class="lead mb-4">Secure, Transparent, and Accessible Voting powered by Blockchain concepts.</p>
+
+{% if not g.user and not g.admin %} {# Assuming you set g.user/g.admin in a before_request if needed, or check session directly #}
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-4">
+        <a href="{{ url_for('login') }}" class="btn btn-success btn-lg px-4 gap-3">User Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4">Register</a>
+        <a href="{{ url_for('admin_login') }}" class="btn btn-warning btn-lg px-4">Admin Panel</a>
+    </div>
+{% endif %}
+
+{% if 'user_id' in session %}
+    <p class="mb-4">You are logged in as {{ session.user_name }}. <a href="{{ url_for('vote') }}" class="btn btn-info">Go to Vote</a></p>
+{% endif %}
+ {% if 'admin_logged_in' in session %}
+    <p class="mb-4">You are logged in as Admin. <a href="{{ url_for('admin_dashboard') }}" class="btn btn-info">Go to Dashboard</a></p>
+{% endif %}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <h2>About This System</h2>
+        <ul class="list-group list-group-flush text-start mb-4">
+            {% for detail in details %}
+            <li class="list-group-item">{{ detail }}</li>
+            {% endfor %}
+             <li class="list-group-item"><strong>Current Status:</strong> Voting is currently <strong class="text-{{ 'success' if voting_open else 'danger' }}">{{ 'OPEN' if voting_open else 'CLOSED' }}</strong>.</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Optional Logo -->
+<div class="mt-4">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Voting Logo" width="100" class="opacity-75">
+</div>
+{% endblock %}
+

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Add Candidate{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Add New Candidate</h2>
+                <form method="POST" action="{{ url_for('admin_add_candidate') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Candidate Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="party" class="form-label">Party Affiliation <span class="text-danger">*</span></label>
+                        <input type="text" name="party" id="party" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Candidate Image (Optional)</label>
+                        <input type="file" name="image" id="image" class="form-control" accept="image/png, image/jpeg, image/gif">
+                         <div class="form-text">Allowed formats: PNG, JPG, GIF. Max size: 2MB (Add size check in Flask if needed).</div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                         <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Add Candidate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Cast Your Vote{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Cast Your Vote</h1>
+
+{% if not voting_open %}
+    <div class="alert alert-warning text-center" role="alert">
+        <h4 class="alert-heading">Voting Closed</h4>
+        <p>The voting period is currently closed. You cannot cast a vote at this time.</p>
+        <hr>
+        <p class="mb-0">You can view the results (if available) <a href="{{ url_for('results') }}" class="alert-link">here</a>.</p>
+    </div>
+{% elif has_voted %}
+    <div class="alert alert-info text-center" role="alert">
+        <h4 class="alert-heading">Vote Already Cast</h4>
+        <p>Thank you! Your vote has been recorded in the system.</p>
+         <hr>
+         <p class="mb-0">You can view the election results <a href="{{ url_for('results') }}" class="alert-link">here</a>.</p>
+    </div>
+{% elif candidates %}
+    <p class="lead text-center mb-4">Select one candidate from the list below and click "Submit Vote".</p>
+    <form method="POST" action="{{ url_for('vote') }}">
+         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
+            {% for candidate in candidates %}
+             <div class="col">
+                <div class="card h-100 text-center shadow-sm candidate-card">
+                     <img src="{{ url_for('uploaded_file', filename=candidate.image_filename) if candidate.image_filename else url_for('static', filename='images/default_candidate.png') }}"
+                         class="card-img-top mx-auto mt-3" alt="{{ candidate.name }}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ candidate.name }}</h5>
+                        <p class="card-text text-muted">{{ candidate.party }}</p>
+                        <div class="form-check mt-auto">
+                            <input class="form-check-input" type="radio" name="candidate" id="candidate{{ candidate.id }}" value="{{ candidate.id }}" required>
+                            <label class="form-check-label stretched-link" for="candidate{{ candidate.id }}">
+                                Select {{ candidate.name }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+             </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg">Submit Vote</button>
+        </div>
+    </form>
+{% else %}
+    <div class="alert alert-warning text-center" role="alert">
+        No candidates are available for voting at this moment. Please check back later or contact the administrator.
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block head_extra %}
+<style>
+    /* Make the whole card clickable for the radio button */
+    .candidate-card {
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .candidate-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .candidate-card input[type="radio"] {
+         /* Hide the default radio button visually but keep it accessible */
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+     /* Style the card when its radio is checked */
+    .candidate-card input[type="radio"]:checked + .form-check-label::before {
+         /* Optional: add visual indicator like border or background */
+    }
+     .candidate-card input[type="radio"]:checked ~ .card-body {
+        /* Example: change background or add border */
+     }
+    .candidate-card:has(input[type="radio"]:checked) {
+         border: 2px solid var(--bs-success);
+         background-color: #e9f7ef; /* Light green background */
+    }
+
+    .candidate-card .form-check-label {
+        cursor: pointer; /* Ensure label is clickable */
+        width: 100%; /* Make label cover the area */
+        height: 100%;
+        display: block;
+        position: relative; /* Needed for stretched-link */
+        z-index: 1; /* Ensure label is clickable over other elements */
+        padding: 1rem; /* Add padding to make clickable area larger */
+    }
+    .candidate-card .stretched-link::after {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        content: "";
+    }
+</style>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // Optional JS to select radio when card is clicked anywhere
+    document.querySelectorAll('.candidate-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                // Optional: Trigger change event if needed by other scripts
+                // radio.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+</script>
+{% endblock %}
